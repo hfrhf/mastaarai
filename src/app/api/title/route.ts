@@ -62,10 +62,16 @@ export async function POST(req: NextRequest) {
       }
 
       const json = await response.json();
-      let title = json?.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || 'New Chat';
+      let title = json?.candidates?.[0]?.content?.parts?.[0]?.text || '';
       
+      // Strip thinking process block (<think>...</think>)
+      title = title.replace(/<think>[\s\S]*?<\/think>/g, '').trim();
       // Strip surrounding quotes if any
-      title = title.replace(/^["']|["']$/g, '');
+      title = title.replace(/^["']|["']$/g, '').trim();
+      
+      if (!title) {
+        title = 'New Chat';
+      }
 
       return new Response(JSON.stringify({ title }), {
         headers: { 'Content-Type': 'application/json' },
@@ -111,10 +117,16 @@ export async function POST(req: NextRequest) {
     }
 
     const json = await response.json();
-    let title = json?.choices?.[0]?.message?.content?.trim() || 'New Chat';
+    let title = json?.choices?.[0]?.message?.content || '';
     
+    // Strip thinking process block (<think>...</think>)
+    title = title.replace(/<think>[\s\S]*?<\/think>/g, '').trim();
     // Strip surrounding quotes if any
-    title = title.replace(/^["']|["']$/g, '');
+    title = title.replace(/^["']|["']$/g, '').trim();
+
+    if (!title) {
+      title = 'New Chat';
+    }
 
     return new Response(JSON.stringify({ title }), {
       headers: { 'Content-Type': 'application/json' },
