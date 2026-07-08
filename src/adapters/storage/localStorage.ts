@@ -1,9 +1,10 @@
-import { IStorageAdapter } from './types';
+import { IStorageAdapter, Memory } from './types';
 import { Chat, ChatSettings } from '../../types/chat';
 import defaultSettings from '../../config/defaultSettings.json';
 
 const CHATS_KEY = 'antigravity_chats';
 const SETTINGS_KEY = 'antigravity_settings';
+const MEMORIES_KEY = 'antigravity_memories';
 
 export class LocalStorageAdapter implements IStorageAdapter {
   private isBrowser(): boolean {
@@ -68,6 +69,45 @@ export class LocalStorageAdapter implements IStorageAdapter {
       localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
     } catch (e) {
       console.error('Failed to save settings to localStorage', e);
+    }
+  }
+
+  async getMemories(): Promise<Memory[]> {
+    if (!this.isBrowser()) return [];
+    try {
+      const data = localStorage.getItem(MEMORIES_KEY);
+      return data ? JSON.parse(data) : [];
+    } catch (e) {
+      console.error('Failed to get memories from localStorage', e);
+      return [];
+    }
+  }
+
+  async saveMemory(content: string): Promise<Memory> {
+    const memory: Memory = {
+      id: Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15),
+      content,
+      createdAt: new Date().toISOString()
+    };
+    if (!this.isBrowser()) return memory;
+    try {
+      const memories = await this.getMemories();
+      memories.push(memory);
+      localStorage.setItem(MEMORIES_KEY, JSON.stringify(memories));
+    } catch (e) {
+      console.error('Failed to save memory to localStorage', e);
+    }
+    return memory;
+  }
+
+  async deleteMemory(id: string): Promise<void> {
+    if (!this.isBrowser()) return;
+    try {
+      const memories = await this.getMemories();
+      const filtered = memories.filter((m) => m.id !== id);
+      localStorage.setItem(MEMORIES_KEY, JSON.stringify(filtered));
+    } catch (e) {
+      console.error('Failed to delete memory from localStorage', e);
     }
   }
 }

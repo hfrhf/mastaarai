@@ -4,9 +4,15 @@ export const runtime = 'edge';
 
 export async function POST(req: NextRequest) {
   try {
-    const { messages, model, temperature, maxTokens, stream } = await req.json();
+    const { messages, model, temperature, maxTokens, stream, memories } = await req.json();
 
     const isGoogle = model && (model.startsWith('google/') || model.startsWith('gemini-'));
+
+    // Format memories context if available
+    let memoryContext = '';
+    if (memories && memories.length > 0) {
+      memoryContext = `\n\n[User Profile & Saved Memories:\nThe AI assistant has stored the following permanent facts about the user. Adhere to these facts/preferences where applicable:\n${memories.map((m: string) => `- ${m}`).join('\n')}\n]`;
+    }
 
     if (isGoogle) {
       const geminiKey = process.env.GEMINI_API_KEY;
@@ -19,7 +25,10 @@ export async function POST(req: NextRequest) {
 
       // Extract system instructions if present
       const systemMessage = messages.find((m: any) => m.role === 'system');
-      const systemPrompt = systemMessage ? systemMessage.content : '';
+      let systemPrompt = systemMessage ? systemMessage.content : '';
+      if (memoryContext) {
+        systemPrompt = systemPrompt ? (systemPrompt + memoryContext) : memoryContext.trim();
+      }
 
       // Filter out system message and format history for Gemini contents
       const filteredMessages = messages.filter((m: any) => m.role !== 'system');
@@ -161,12 +170,23 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    let mappedMessages = messages.map((m: any) => ({
+      role: m.role,
+      content: m.content,
+    }));
+
+    if (memoryContext) {
+      const sysMsgIdx = mappedMessages.findIndex((m: any) => m.role === 'system');
+      if (sysMsgIdx >= 0) {
+        mappedMessages[sysMsgIdx].content += memoryContext;
+      } else {
+        mappedMessages.unshift({ role: 'system', content: memoryContext.trim() });
+      }
+    }
+
     const body = {
       model: model || 'MiniMaxAI/MiniMax-M2.7',
-      messages: messages.map((m: any) => ({
-        role: m.role,
-        content: m.content,
-      })),
+      messages: mappedMessages,
       temperature: temperature ?? 0.7,
       max_tokens: maxTokens ?? 2048,
       stream: stream ?? true,

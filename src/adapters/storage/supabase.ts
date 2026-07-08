@@ -1,5 +1,5 @@
 import { supabase } from '../../utils/supabaseClient';
-import { IStorageAdapter } from './types';
+import { IStorageAdapter, Memory } from './types';
 import { Chat, ChatSettings } from '../../types/chat';
 import { LocalStorageAdapter } from './localStorage';
 import defaultSettings from '../../config/defaultSettings.json';
@@ -173,6 +173,86 @@ export class SupabaseStorageAdapter implements IStorageAdapter {
     } catch (e: any) {
       console.warn('Failed to save settings to Supabase, falling back to LocalStorage:', e?.message || e);
       await this.localFallback.saveSettings(settings);
+    }
+  }
+
+  async getMemories(): Promise<Memory[]> {
+    try {
+      const userId = await this.getUserId();
+      if (!userId) {
+        return this.localFallback.getMemories();
+      }
+
+      const client = this.getClient();
+      const { data, error } = await client
+        .from('memories')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      return (data || []).map((row) => ({
+        id: row.id,
+        content: row.content,
+        createdAt: row.created_at,
+      }));
+    } catch (e: any) {
+      console.warn('Failed to get memories from Supabase, falling back to LocalStorage:', e?.message || e);
+      return this.localFallback.getMemories();
+    }
+  }
+
+  async saveMemory(content: string): Promise<Memory> {
+    const memoryId = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+    const createdAt = new Date().toISOString();
+    const memory: Memory = { id: memoryId, content, createdAt };
+
+    try {
+      const userId = await this.getUserId();
+      if (!userId) {
+        return this.localFallback.saveMemory(content);
+      }
+
+      const client = this.getClient();
+      const payload = {
+        id: memoryId,
+        user_id: userId,
+        content,
+        created_at: createdAt,
+      };
+
+      const { error } = await client
+        .from('memories')
+        .insert(payload);
+
+      if (error) throw error;
+      return memory;
+    } catch (e: any) {
+      console.warn('Failed to save memory to Supabase, falling back to LocalStorage:', e?.message || e);
+      return this.localFallback.saveMemory(content);
+    }
+  }
+
+  async deleteMemory(id: string): Promise<void> {
+    try {
+      const userId = await this.getUserId();
+      if (!userId) {
+        await this.localFallback.deleteMemory(id);
+        return;
+      }
+
+      const client = this.getClient();
+      const { error } = await client
+        .from('memories')
+        .delete()
+        .eq('id', id)
+        .eq('user_id', userId);
+
+      if (error) throw error;
+    } catch (e: any) {
+      console.warn('Failed to delete memory from Supabase, falling back to LocalStorage:', e?.message || e);
+      await this.localFallback.deleteMemory(id);
     }
   }
 }

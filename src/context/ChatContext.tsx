@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { Chat, Message, ChatSettings, ModelConfig } from '../types/chat';
 import { getStorageAdapter } from '../adapters/storage';
+import { Memory } from '../adapters/storage/types';
 import { parseSSEChunk } from '../utils/api';
 import { translations } from '../utils/translations';
 import { supabase } from '../utils/supabaseClient';
@@ -43,6 +44,8 @@ interface ChatContextType {
   authModalOpen: boolean;
   setAuthModalOpen: (open: boolean) => void;
   logout: () => Promise<void>;
+  memories: Memory[];
+  deleteMemory: (id: string) => Promise<void>;
 }
 
 const ChatContext = createContext<ChatContextType | undefined>(undefined);
@@ -62,6 +65,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isGenerating, setIsGenerating] = useState(false);
   const [user, setUser] = useState<any | null>(null);
   const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [memories, setMemories] = useState<Memory[]>([]);
   const abortControllerRef = useRef<AbortController | null>(null);
 
   const storage = getStorageAdapter();
@@ -88,6 +92,9 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         const storedChats = await storage.getChats();
         setChats(storedChats);
+
+        const storedMemories = await storage.getMemories();
+        setMemories(storedMemories);
 
         if (storedChats.length > 0) {
           setActiveChatId(storedChats[0].id);
@@ -128,6 +135,34 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
       } else {
         addToast(t.logoutSuccess, 'success');
       }
+    }
+  };
+
+  const deleteMemory = async (id: string) => {
+    await storage.deleteMemory(id);
+    setMemories((prev) => prev.filter((m) => m.id !== id));
+    addToast(settings.language === 'ar' ? 'تم حذف الذاكرة بنجاح' : 'Memory deleted successfully', 'success');
+  };
+
+  const extractMemoriesBackground = async (messageText: string) => {
+    try {
+      const response = await fetch('/api/memories/extract', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: messageText }),
+      });
+      if (response.ok) {
+        const { memories: extracted } = await response.json();
+        if (extracted && extracted.length > 0) {
+          for (const fact of extracted) {
+            const saved = await storage.saveMemory(fact);
+            setMemories((prev) => [saved, ...prev]);
+            addToast(settings.language === 'ar' ? `تحديث الذاكرة: "${fact}"` : `Memory updated: "${fact}"`, 'info');
+          }
+        }
+      }
+    } catch (e) {
+      console.error('Failed to extract memories in background:', e);
     }
   };
 
@@ -328,6 +363,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
           temperature: temp,
           maxTokens: maxTok,
           stream: true,
+          memories: memories.map(m => m.content),
         }),
         signal: controller.signal,
       });
@@ -565,6 +601,9 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (isFirstMsg) {
       generateTitle(currentChatId, content, currentChat.modelId);
     }
+
+    // Process memory extraction asynchronously in background
+    extractMemoriesBackground(content);
 
     let searchResults: { title: string; url: string }[] | undefined = undefined;
 
@@ -854,6 +893,8 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
         authModalOpen,
         setAuthModalOpen,
         logout,
+        memories,
+        deleteMemory,
       }}
     >
       {children}
