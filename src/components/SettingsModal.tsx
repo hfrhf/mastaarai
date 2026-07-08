@@ -68,12 +68,12 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
       onClick={onClose}
     >
       <div 
-        className="bg-white dark:bg-[#1e1e1e] border border-neutral-200 dark:border-neutral-800 rounded-3xl w-full max-w-2xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh] text-neutral-900 dark:text-neutral-100" 
+        className="bg-white dark:bg-[#1e1e1e] border border-neutral-200 dark:border-neutral-800 rounded-3xl w-full max-w-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] md:max-h-[85vh] text-neutral-900 dark:text-neutral-100" 
         onClick={(e) => e.stopPropagation()}
         style={{ direction: isRTL ? 'rtl' : 'ltr' }}
       >
         {/* Modal Header */}
-        <div className="flex items-center justify-between p-5 border-b border-neutral-200 dark:border-neutral-800">
+        <div className="flex items-center justify-between p-5 border-b border-neutral-200 dark:border-neutral-800 flex-shrink-0">
           <div className="flex items-center gap-2 font-semibold">
             <Settings size={18} className="text-neutral-500" />
             <span>{t.settingsTitle}</span>
@@ -87,12 +87,12 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
         </div>
 
         {/* Modal Body Container (Tab layout) */}
-        <div className="flex flex-1 overflow-hidden min-h-[400px]">
+        <div className="flex flex-col md:flex-row flex-1 overflow-hidden">
           {/* Sidebar Tab Selectors */}
-          <div className="w-1/3 bg-neutral-50 dark:bg-[#181818] p-4 border-r dark:border-neutral-800 space-y-1 select-none">
+          <div className="w-full md:w-1/3 bg-neutral-50 dark:bg-[#181818] p-3 md:p-4 border-b md:border-b-0 md:border-r border-neutral-200 dark:border-neutral-800 flex md:flex-col gap-1 overflow-x-auto md:overflow-x-visible select-none flex-shrink-0">
             <button
               onClick={() => setActiveTab('general')}
-              className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all ${
+              className={`flex items-center gap-2.5 px-3 py-2 md:py-2.5 rounded-xl text-xs font-semibold transition-all flex-shrink-0 ${
                 activeTab === 'general'
                   ? 'bg-neutral-900 text-white dark:bg-white dark:text-black shadow-md'
                   : 'text-neutral-500 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800'
@@ -104,7 +104,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
 
             <button
               onClick={() => setActiveTab('models')}
-              className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all ${
+              className={`flex items-center gap-2.5 px-3 py-2 md:py-2.5 rounded-xl text-xs font-semibold transition-all flex-shrink-0 ${
                 activeTab === 'models'
                   ? 'bg-neutral-900 text-white dark:bg-white dark:text-black shadow-md'
                   : 'text-neutral-500 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800'
@@ -116,7 +116,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
 
             <button
               onClick={() => setActiveTab('memory')}
-              className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all ${
+              className={`flex items-center gap-2.5 px-3 py-2 md:py-2.5 rounded-xl text-xs font-semibold transition-all flex-shrink-0 ${
                 activeTab === 'memory'
                   ? 'bg-neutral-900 text-white dark:bg-white dark:text-black shadow-md'
                   : 'text-neutral-500 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800'
@@ -128,7 +128,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
           </div>
 
           {/* Active Tab Panel Content */}
-          <div className="flex-1 p-6 overflow-y-auto max-h-[60vh] space-y-6 text-sm">
+          <div className="flex-1 p-4 md:p-6 overflow-y-auto space-y-6 text-sm">
             {activeTab === 'general' && (
               <div className="space-y-6">
                 {/* Theme Selector */}
@@ -348,7 +348,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
         </div>
 
         {/* Modal Footer */}
-        <div className="flex justify-end gap-2 p-5 border-t border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-[#1a1a1a]">
+        <div className="flex justify-end gap-2 p-5 border-t border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-[#1a1a1a] flex-shrink-0">
           <button 
             className="px-4 py-2 border border-neutral-300 dark:border-neutral-700 rounded-xl text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-all font-medium text-xs cursor-pointer"
             onClick={onClose}
