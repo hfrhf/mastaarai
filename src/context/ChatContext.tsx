@@ -5,6 +5,7 @@ import { Chat, Message, ChatSettings, ModelConfig } from '../types/chat';
 import { getStorageAdapter } from '../adapters/storage';
 import { parseSSEChunk } from '../utils/api';
 import { translations } from '../utils/translations';
+import { supabase } from '../utils/supabaseClient';
 import defaultSettings from '../config/defaultSettings.json';
 import modelsList from '../config/models.json';
 
@@ -38,6 +39,10 @@ interface ChatContextType {
   addToast: (message: string, type?: 'success' | 'error' | 'info') => void;
   removeToast: (toastId: string) => void;
   exportChat: (chatId: string, format: 'markdown' | 'json' | 'text') => void;
+  user: any | null;
+  authModalOpen: boolean;
+  setAuthModalOpen: (open: boolean) => void;
+  logout: () => Promise<void>;
 }
 
 const ChatContext = createContext<ChatContextType | undefined>(undefined);
@@ -55,6 +60,8 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [settings, setSettings] = useState<ChatSettings>(defaultSettings as ChatSettings);
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [user, setUser] = useState<any | null>(null);
+  const [authModalOpen, setAuthModalOpen] = useState(false);
   const abortControllerRef = useRef<AbortController | null>(null);
 
   const storage = getStorageAdapter();
@@ -64,9 +71,9 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Active translation dictionary
   const t = translations[settings.language || 'en'];
 
-  // Initialize and load from storage adapter
+  // Initialize, subscribe to auth state changes and load data dynamically
   useEffect(() => {
-    const init = async () => {
+    const loadData = async () => {
       try {
         const storedSettings = await storage.getSettings();
         setSettings(storedSettings);
@@ -84,13 +91,45 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         if (storedChats.length > 0) {
           setActiveChatId(storedChats[0].id);
+        } else {
+          setActiveChatId(null);
         }
       } catch (e) {
-        console.error('Failed to initialize storage', e);
+        console.error('Failed to load storage data', e);
       }
     };
-    init();
+
+    // Load initial user session
+    if (supabase) {
+      supabase.auth.getUser().then(({ data: { user } }) => {
+        setUser(user);
+        loadData();
+      });
+
+      // Listen to auth shifts
+      const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+        setUser(session?.user || null);
+        await loadData();
+      });
+
+      return () => {
+        subscription.unsubscribe();
+      };
+    } else {
+      loadData();
+    }
   }, []);
+
+  const logout = async () => {
+    if (supabase) {
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        addToast(error.message, 'error');
+      } else {
+        addToast(t.logoutSuccess, 'success');
+      }
+    }
+  };
 
   const addToast = (message: string, type: 'success' | 'error' | 'info' = 'success') => {
     const id = generateUUID();
@@ -811,6 +850,10 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
         addToast,
         removeToast,
         exportChat,
+        user,
+        authModalOpen,
+        setAuthModalOpen,
+        logout,
       }}
     >
       {children}

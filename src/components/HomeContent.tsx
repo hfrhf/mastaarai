@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Sidebar from './Sidebar';
 import ChatWindow from './ChatWindow';
 import { SettingsModal } from './SettingsModal';
+import { AuthModal } from './AuthModal';
 import { ToastContainer } from './Toast';
 import { useChat } from '../context/ChatContext';
 import { X } from 'lucide-react';
@@ -59,6 +60,7 @@ export default function HomeContent() {
       />
       
       <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
+      <AuthModal />
       <ToastContainer />
 
       {/* MODAL UPGRADE */}

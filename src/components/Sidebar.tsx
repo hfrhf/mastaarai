@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { useChat } from '../context/ChatContext';
-import { Trash2, Search, Archive, Briefcase, Grid, Code, Settings } from 'lucide-react';
+import { Trash2, Search, Archive, Briefcase, Grid, Code, Settings, LogOut } from 'lucide-react';
 
 interface SidebarProps {
   onOpenSettings: () => void;
@@ -26,10 +26,18 @@ export const Sidebar: React.FC<SidebarProps> = ({
     deleteChat, 
     createNewChat,
     settings,
-    t
+    t,
+    user,
+    setAuthModalOpen,
+    logout
   } = useChat();
 
   const isRTL = settings.language === 'ar';
+
+  // Calculate profile card information
+  const isLoggedIn = !!user;
+  const username = isLoggedIn ? user.email.split('@')[0] : (isRTL ? 'مستخدم ضيف' : 'Guest');
+  const initials = isLoggedIn ? user.email.substring(0, 2).toUpperCase() : 'G';
 
   return (
     <aside 
@@ -193,36 +201,54 @@ export const Sidebar: React.FC<SidebarProps> = ({
         id="sidebar-footer"
       >
         <div 
-          onClick={onOpenSettings}
+          onClick={() => {
+            if (!isLoggedIn) {
+              setAuthModalOpen(true);
+            }
+          }}
           className={`flex items-center ${
             isCollapsed ? 'justify-center p-1.5' : 'justify-between p-2'
           } rounded-lg hover:bg-neutral-900 transition-colors cursor-pointer group`}
         >
           <div className="flex items-center gap-3 overflow-hidden">
             <div className={`w-8 h-8 rounded-full ${
-              isPremium 
-                ? 'bg-gradient-to-tr from-amber-400 to-orange-500' 
-                : 'bg-fuchsia-700'
+              isLoggedIn 
+                ? (isPremium ? 'bg-gradient-to-tr from-amber-400 to-orange-500' : 'bg-fuchsia-700') 
+                : 'bg-neutral-700'
             } flex items-center justify-center text-xs font-semibold text-white flex-shrink-0`}>
-              MA
+              {initials}
             </div>
             {!isCollapsed && (
               <div className="flex flex-col text-left overflow-hidden sidebar-text">
-                <span className="font-medium text-sm text-neutral-200 group-hover:text-white truncate">mohammed</span>
-                <span className="text-[11px] text-neutral-500">{isPremium ? 'Plus' : 'Free'}</span>
+                <span className="font-medium text-sm text-neutral-200 group-hover:text-white truncate">
+                  {username}
+                </span>
+                <span className="text-[11px] text-neutral-500">
+                  {isLoggedIn ? (isPremium ? 'Plus' : 'Free') : (isRTL ? 'ضيف' : 'Guest')}
+                </span>
               </div>
             )}
           </div>
-          {!isCollapsed && !isPremium && (
-            <button 
-              onClick={(e) => {
-                e.stopPropagation();
-                onUpgrade();
-              }} 
-              className="px-2.5 py-1 text-xs bg-neutral-800 hover:bg-neutral-700 text-white font-medium rounded-full border border-neutral-700 transition-colors"
-            >
-              Upgrade
-            </button>
+
+          {!isCollapsed && (
+            <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
+              {isLoggedIn ? (
+                <button 
+                  onClick={logout}
+                  className="p-1 hover:bg-neutral-800 rounded text-neutral-400 hover:text-red-500 transition-colors"
+                  title={t.logout}
+                >
+                  <LogOut size={14} />
+                </button>
+              ) : (
+                <button 
+                  onClick={() => setAuthModalOpen(true)}
+                  className="px-2.5 py-1 text-xs bg-indigo-600 hover:bg-indigo-500 text-white font-medium rounded-full transition-colors"
+                >
+                  {t.login}
+                </button>
+              )}
+            </div>
           )}
         </div>
       </div>

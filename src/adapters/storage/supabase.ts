@@ -1,35 +1,42 @@
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { supabase } from '../../utils/supabaseClient';
 import { IStorageAdapter } from './types';
 import { Chat, ChatSettings } from '../../types/chat';
 import { LocalStorageAdapter } from './localStorage';
 import defaultSettings from '../../config/defaultSettings.json';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
-
 export class SupabaseStorageAdapter implements IStorageAdapter {
-  private supabase: SupabaseClient | null = null;
   private localFallback = new LocalStorageAdapter();
 
-  constructor() {
-    if (supabaseUrl && supabaseAnonKey) {
-      this.supabase = createClient(supabaseUrl, supabaseAnonKey);
-    }
-  }
-
-  private getClient(): SupabaseClient {
-    if (!this.supabase) {
+  private getClient() {
+    if (!supabase) {
       throw new Error('Supabase client is not initialized. Please configure NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY.');
     }
-    return this.supabase;
+    return supabase;
+  }
+
+  private async getUserId(): Promise<string | null> {
+    try {
+      const client = this.getClient();
+      const { data: { user }, error } = await client.auth.getUser();
+      if (error || !user) return null;
+      return user.id;
+    } catch (e) {
+      return null;
+    }
   }
 
   async getChats(): Promise<Chat[]> {
     try {
+      const userId = await this.getUserId();
+      if (!userId) {
+        return this.localFallback.getChats();
+      }
+
       const client = this.getClient();
       const { data, error } = await client
         .from('chats')
         .select('*')
+        .eq('user_id', userId)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -52,9 +59,16 @@ export class SupabaseStorageAdapter implements IStorageAdapter {
 
   async saveChat(chat: Chat): Promise<void> {
     try {
+      const userId = await this.getUserId();
+      if (!userId) {
+        await this.localFallback.saveChat(chat);
+        return;
+      }
+
       const client = this.getClient();
       const payload = {
         id: chat.id,
+        user_id: userId,
         title: chat.title,
         created_at: chat.createdAt,
         model_id: chat.modelId,
@@ -77,11 +91,18 @@ export class SupabaseStorageAdapter implements IStorageAdapter {
 
   async deleteChat(id: string): Promise<void> {
     try {
+      const userId = await this.getUserId();
+      if (!userId) {
+        await this.localFallback.deleteChat(id);
+        return;
+      }
+
       const client = this.getClient();
       const { error } = await client
         .from('chats')
         .delete()
-        .eq('id', id);
+        .eq('id', id)
+        .eq('user_id', userId);
 
       if (error) throw error;
     } catch (e: any) {
@@ -92,11 +113,16 @@ export class SupabaseStorageAdapter implements IStorageAdapter {
 
   async getSettings(): Promise<ChatSettings> {
     try {
+      const userId = await this.getUserId();
+      if (!userId) {
+        return this.localFallback.getSettings();
+      }
+
       const client = this.getClient();
       const { data, error } = await client
         .from('settings')
         .select('*')
-        .eq('id', 'default')
+        .eq('user_id', userId)
         .single();
 
       if (error && error.code !== 'PGRST116') throw error; // PGRST116 is code for "no rows returned"
@@ -121,9 +147,15 @@ export class SupabaseStorageAdapter implements IStorageAdapter {
 
   async saveSettings(settings: ChatSettings): Promise<void> {
     try {
+      const userId = await this.getUserId();
+      if (!userId) {
+        await this.localFallback.saveSettings(settings);
+        return;
+      }
+
       const client = this.getClient();
       const payload = {
-        id: 'default',
+        user_id: userId,
         theme: settings.theme,
         language: settings.language,
         developer_mode: settings.developerMode,
@@ -135,7 +167,7 @@ export class SupabaseStorageAdapter implements IStorageAdapter {
 
       const { error } = await client
         .from('settings')
-        .upsert(payload, { onConflict: 'id' });
+        .upsert(payload, { onConflict: 'user_id' });
 
       if (error) throw error;
     } catch (e: any) {
