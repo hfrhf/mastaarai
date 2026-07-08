@@ -2,14 +2,6 @@ import { NextRequest } from 'next/server';
 
 export async function POST(req: NextRequest) {
   try {
-    const apiKey = process.env.DAHL_API_KEY;
-    if (!apiKey) {
-      return new Response(
-        JSON.stringify({ error: 'DAHL_API_KEY is not configured.' }),
-        { status: 500, headers: { 'Content-Type': 'application/json' } }
-      );
-    }
-
     const { prompt, model } = await req.json();
     if (!prompt) {
       return new Response(
@@ -20,6 +12,70 @@ export async function POST(req: NextRequest) {
 
     const systemInstruction = 
       "You are a helpful assistant. Your task is to generate an extremely short, professional title for a chat conversation based on the user's first message. The title MUST be less than 5 words. Do not use quotes, punctuation, or any introductory phrases (e.g. do not write 'Title: ...'). Just output the title.";
+
+    const isGoogle = model && (model.startsWith('google/') || model.startsWith('gemini-'));
+
+    if (isGoogle) {
+      const geminiKey = process.env.GEMINI_API_KEY;
+      if (!geminiKey) {
+        return new Response(
+          JSON.stringify({ error: 'GEMINI_API_KEY is not configured.' }),
+          { status: 500, headers: { 'Content-Type': 'application/json' } }
+        );
+      }
+
+      const geminiBody = {
+        systemInstruction: {
+          parts: [{ text: systemInstruction }]
+        },
+        contents: [
+          { role: 'user', parts: [{ text: `Generate a title for: "${prompt}"` }] }
+        ],
+        generationConfig: {
+          temperature: 0.3,
+          maxOutputTokens: 30
+        }
+      };
+
+      const response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${geminiKey}`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(geminiBody),
+        }
+      );
+
+      if (!response.ok) {
+        const errText = await response.text();
+        console.error('Gemini Title API error response:', errText);
+        return new Response(
+          JSON.stringify({ error: `Gemini API error: ${response.statusText}`, details: errText }),
+          { status: response.status, headers: { 'Content-Type': 'application/json' } }
+        );
+      }
+
+      const json = await response.json();
+      let title = json?.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || 'New Chat';
+      
+      // Strip surrounding quotes if any
+      title = title.replace(/^["']|["']$/g, '');
+
+      return new Response(JSON.stringify({ title }), {
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Default: Dahl Provider
+    const apiKey = process.env.DAHL_API_KEY;
+    if (!apiKey) {
+      return new Response(
+        JSON.stringify({ error: 'DAHL_API_KEY is not configured.' }),
+        { status: 500, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
 
     const body = {
       model: model || 'MiniMaxAI/MiniMax-M2.7',
