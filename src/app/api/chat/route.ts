@@ -33,7 +33,13 @@ export async function POST(req: NextRequest) {
       // Filter out system message and format history for Gemini contents
       const filteredMessages = messages.filter((m: any) => m.role !== 'system');
       const contents = filteredMessages.map((m: any) => {
-        const parts: any[] = [{ text: m.content || '' }];
+        const parts: any[] = [];
+        
+        // Only push text part if it is not empty to comply with Gemini API schema
+        if (m.content && m.content.trim() !== '') {
+          parts.push({ text: m.content });
+        }
+        
         if (m.attachments && m.attachments.length > 0) {
           m.attachments.forEach((att: any) => {
             parts.push({
@@ -44,6 +50,12 @@ export async function POST(req: NextRequest) {
             });
           });
         }
+        
+        // Gemini contents require at least one part
+        if (parts.length === 0) {
+          parts.push({ text: ' ' });
+        }
+        
         return {
           role: m.role === 'assistant' ? 'model' : 'user',
           parts
@@ -185,7 +197,12 @@ export async function POST(req: NextRequest) {
 
     let mappedMessages = messages.map((m: any) => {
       if (m.attachments && m.attachments.length > 0) {
-        const contentArray: any[] = [{ type: 'text', text: m.content || '' }];
+        const contentArray: any[] = [];
+        
+        if (m.content && m.content.trim() !== '') {
+          contentArray.push({ type: 'text', text: m.content });
+        }
+        
         m.attachments.forEach((att: any) => {
           if (att.mimeType.startsWith('image/')) {
             contentArray.push({
@@ -196,6 +213,11 @@ export async function POST(req: NextRequest) {
             });
           }
         });
+        
+        if (contentArray.length === 0) {
+          contentArray.push({ type: 'text', text: ' ' });
+        }
+        
         return {
           role: m.role,
           content: contentArray,
