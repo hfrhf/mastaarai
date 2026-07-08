@@ -76,10 +76,13 @@ export async function POST(req: NextRequest) {
         };
       }
 
+      // Extract Gemini model name dynamically
+      const modelName = model ? model.replace('google/', '') : 'gemini-3.5-flash';
+
       const isStream = stream ?? true;
       if (isStream) {
         const response = await fetch(
-          `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:streamGenerateContent?alt=sse&key=${geminiKey}`,
+          `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:streamGenerateContent?alt=sse&key=${geminiKey}`,
           {
             method: 'POST',
             headers: {
@@ -144,7 +147,7 @@ export async function POST(req: NextRequest) {
         });
       } else {
         const response = await fetch(
-          `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${geminiKey}`,
+          `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${geminiKey}`,
           {
             method: 'POST',
             headers: {

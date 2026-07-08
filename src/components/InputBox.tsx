@@ -4,6 +4,7 @@ import React, { useRef, useState, useEffect } from 'react';
 import { useChat } from '../context/ChatContext';
 import { ArrowUp, Plus, Square, Globe, Mic, X, Sparkles } from 'lucide-react';
 import { Attachment } from '../types/chat';
+import modelsList from '../config/models.json';
 
 export const InputBox: React.FC = () => {
   const { 
@@ -46,7 +47,19 @@ export const InputBox: React.FC = () => {
     });
   };
 
+  const activeModel = modelsList.find(m => m.id === activeChat?.modelId);
+  const supportsVision = activeModel?.supportsVision ?? false;
+
   const triggerUpload = () => {
+    if (!supportsVision) {
+      addToast(
+        isAr 
+          ? "النموذج الحالي لا يدعم قراءة الصور والملفات. يرجى التبديل إلى نموذج Gemini 3.5 Flash من القائمة العلوية لإرسال الملفات." 
+          : "Le modèle actuel ne prend pas en charge la lecture des fichiers. Veuillez basculer vers Gemini 3.5 Flash pour envoyer des fichiers.", 
+        "error"
+      );
+      return;
+    }
     fileInputRef.current?.click();
   };
 
@@ -197,10 +210,18 @@ export const InputBox: React.FC = () => {
           {/* Attachment + Button */}
           <button 
             onClick={triggerUpload}
-            className={`p-2 md:p-2.5 bg-neutral-200 dark:bg-neutral-800 hover:bg-neutral-300 dark:hover:bg-neutral-700 text-neutral-600 dark:text-neutral-300 rounded-full transition-colors flex-shrink-0 cursor-pointer ${
+            className={`p-2 md:p-2.5 rounded-full transition-colors flex-shrink-0 cursor-pointer ${
+              !supportsVision 
+                ? 'bg-neutral-200/50 dark:bg-neutral-800/50 text-neutral-400 dark:text-neutral-600 opacity-60 cursor-not-allowed'
+                : 'bg-neutral-200 dark:bg-neutral-800 hover:bg-neutral-300 dark:hover:bg-neutral-700 text-neutral-600 dark:text-neutral-300'
+            } ${
               uploading ? 'animate-pulse pointer-events-none' : ''
             }`}
-            title={isAr ? 'إرفاق ملفات' : 'Ajouter des fichiers'}
+            title={
+              !supportsVision 
+                ? (isAr ? 'النموذج الحالي لا يدعم إرفاق ملفات' : 'Fichiers non pris en charge par ce modèle')
+                : (isAr ? 'إرفاق ملفات' : 'Ajouter des fichiers')
+            }
           >
             <Plus className={`w-[18px] h-[18px] md:w-5 md:h-5 transition-transform ${uploading ? 'rotate-45' : ''}`} />
           </button>
