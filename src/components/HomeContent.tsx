@@ -44,6 +44,14 @@ export default function HomeContent() {
 
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-white dark:bg-[#171717]">
+      {/* Mobile sidebar overlay backdrop */}
+      {!sidebarCollapsed && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-30 md:hidden backdrop-blur-[2px] transition-all cursor-pointer"
+          onClick={() => setSidebarCollapsed(true)}
+        />
+      )}
+
       <Sidebar 
         onOpenSettings={() => setIsSettingsOpen(true)} 
         isCollapsed={sidebarCollapsed}

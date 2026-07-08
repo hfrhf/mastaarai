@@ -192,17 +192,17 @@ export const InputBox: React.FC = () => {
       )}
 
       {/* Main input wrapper */}
-      <div className="w-full bg-neutral-100 dark:bg-[#2f2f2f] rounded-3xl p-3 shadow-xl border border-transparent dark:border-neutral-800 transition-all focus-within:ring-2 focus-within:ring-neutral-300 dark:focus-within:ring-neutral-700 relative">
-        <div className="flex items-center gap-2">
+      <div className="w-full bg-neutral-100 dark:bg-[#2f2f2f] rounded-3xl p-2 md:p-3 shadow-xl border border-transparent dark:border-neutral-800 transition-all focus-within:ring-2 focus-within:ring-neutral-300 dark:focus-within:ring-neutral-700 relative">
+        <div className="flex items-center gap-1.5 md:gap-2">
           {/* Attachment + Button */}
           <button 
             onClick={triggerUpload}
-            className={`p-2.5 bg-neutral-200 dark:bg-neutral-800 hover:bg-neutral-300 dark:hover:bg-neutral-700 text-neutral-600 dark:text-neutral-300 rounded-full transition-colors flex-shrink-0 cursor-pointer ${
+            className={`p-2 md:p-2.5 bg-neutral-200 dark:bg-neutral-800 hover:bg-neutral-300 dark:hover:bg-neutral-700 text-neutral-600 dark:text-neutral-300 rounded-full transition-colors flex-shrink-0 cursor-pointer ${
               uploading ? 'animate-pulse pointer-events-none' : ''
             }`}
             title={isAr ? 'إرفاق ملفات' : 'Ajouter des fichiers'}
           >
-            <Plus size={20} className={uploading ? 'rotate-45' : ''} />
+            <Plus className={`w-[18px] h-[18px] md:w-5 md:h-5 transition-transform ${uploading ? 'rotate-45' : ''}`} />
           </button>
 
           {/* Custom Textarea */}
@@ -213,52 +213,52 @@ export const InputBox: React.FC = () => {
             onKeyDown={handleKeyDown}
             placeholder={isAr ? "اسأل سؤالاً أو أرفق صوراً وملفات..." : "Poser une question ou joindre des fichiers..."}
             rows={1}
-            className="flex-1 bg-transparent border-none outline-none resize-none text-[15px] placeholder-neutral-400 text-neutral-900 dark:text-white max-h-36 py-1 w-full focus:ring-0 focus:outline-none"
+            className="flex-1 bg-transparent border-none outline-none resize-none text-sm md:text-[15px] placeholder-neutral-400 text-neutral-900 dark:text-white max-h-36 py-1.5 w-full focus:ring-0 focus:outline-none"
             style={{ minHeight: '24px' }}
           />
 
           {/* Web Search Globe Toggle Button */}
           <button
             onClick={handleToggleSearch}
-            className={`p-2.5 rounded-full transition-colors ${
+            className={`p-2 md:p-2.5 rounded-full transition-colors ${
               isSearchActive 
                 ? 'text-indigo-500 bg-indigo-500/10 dark:bg-indigo-500/20' 
                 : 'text-neutral-400 hover:text-neutral-600 dark:hover:text-white'
             }`}
             title={t.webSearch}
           >
-            <Globe size={20} />
+            <Globe className="w-[18px] h-[18px] md:w-5 md:h-5" />
           </button>
 
           {/* Micro / Voice Input button */}
           <button 
             onClick={() => setVoiceModalOpen(true)}
-            className="p-2.5 text-neutral-400 hover:text-neutral-600 dark:hover:text-white transition-colors"
+            className="p-2 md:p-2.5 text-neutral-400 hover:text-neutral-600 dark:hover:text-white transition-colors flex-shrink-0"
             title="Entrée vocale"
           >
-            <Mic size={20} />
+            <Mic className="w-[18px] h-[18px] md:w-5 md:h-5" />
           </button>
 
           {/* Send / Stop Action Button */}
           {isGenerating ? (
             <button
               onClick={stopGenerating}
-              className="bg-neutral-900 dark:bg-white text-white dark:text-black p-2.5 rounded-full hover:bg-neutral-800 dark:hover:bg-neutral-200 transition-all flex-shrink-0 cursor-pointer"
+              className="bg-neutral-900 dark:bg-white text-white dark:text-black p-2 md:p-2.5 rounded-full hover:bg-neutral-800 dark:hover:bg-neutral-200 transition-all flex-shrink-0 cursor-pointer"
               title={t.stopGenerating}
             >
-              <Square size={16} fill="currentColor" />
+              <Square className="w-3.5 h-3.5 md:w-4 md:h-4" fill="currentColor" />
             </button>
           ) : (
             <button
               onClick={handleSend}
-              className={`p-2.5 rounded-full transition-all flex-shrink-0 ${
+              className={`p-2 md:p-2.5 rounded-full transition-all flex-shrink-0 ${
                 input.trim() || attachments.length > 0
                   ? 'bg-neutral-900 dark:bg-white text-white dark:text-black hover:bg-neutral-800 dark:hover:bg-neutral-200 cursor-pointer'
                   : 'bg-neutral-200 dark:bg-neutral-800 text-neutral-400 dark:text-neutral-600 cursor-default'
               }`}
               disabled={!input.trim() && attachments.length === 0}
             >
-              <ArrowUp size={16} className="stroke-[3px]" />
+              <ArrowUp className="w-3.5 h-3.5 md:w-4 md:h-4 stroke-[3px]" />
             </button>
           )}
         </div>

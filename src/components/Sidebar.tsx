@@ -42,9 +42,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
   return (
     <aside 
       id="sidebar" 
-      className={`${
-        isCollapsed ? 'w-[68px]' : 'w-[260px]'
-      } flex-shrink-0 bg-[#0d0d0d] text-[#ececec] flex flex-col justify-between border-r border-transparent dark:border-neutral-800 transition-all duration-300 relative z-30 h-full`}
+      className={`
+        fixed md:relative inset-y-0 ${isRTL ? 'right-0 border-l' : 'left-0 border-r'} 
+        ${
+          isCollapsed 
+            ? `w-0 ${isRTL ? 'translate-x-full' : '-translate-x-full'} md:w-[68px] md:translate-x-0 overflow-hidden` 
+            : 'w-[260px] translate-x-0'
+        } 
+        flex-shrink-0 bg-[#0d0d0d] text-[#ececec] flex flex-col justify-between border-neutral-800 transition-all duration-300 z-40 h-full
+      `}
     >
       {/* Sidebar Top Header & Navigation */}
       <div className={`flex flex-col flex-1 overflow-y-auto pt-3.5 ${isCollapsed ? 'px-1.5' : 'px-3.5'}`}>
