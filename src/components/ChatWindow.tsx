@@ -31,7 +31,8 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
     settings, 
     updateSettings, 
     selectModelId,
-    t 
+    t,
+    memoryAlert
   } = useChat();
 
   const [modelDropdownOpen, setModelDropdownOpen] = useState(false);
@@ -215,7 +216,19 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
       </div>
 
       {/* STICKY INPUT BAR */}
-      <footer className="w-full bg-gradient-to-t from-white via-white to-transparent dark:from-[#171717] dark:via-[#171717] dark:to-transparent pt-6 pb-4 px-4 z-10">
+      <footer className="w-full bg-gradient-to-t from-white via-white to-transparent dark:from-[#171717] dark:via-[#171717] dark:to-transparent pt-6 pb-4 px-4 z-10 relative">
+        {/* Subtle Memory alert inline badge */}
+        <div className={`absolute left-0 right-0 -top-1 flex justify-center transition-all duration-500 transform ${
+          memoryAlert 
+            ? 'opacity-100 -translate-y-1' 
+            : 'opacity-0 translate-y-2 pointer-events-none'
+        }`}>
+          <div className="flex items-center gap-1.5 px-3 py-1 bg-neutral-100/80 dark:bg-neutral-800/80 backdrop-blur-md rounded-full border border-neutral-200 dark:border-neutral-700/60 shadow-sm text-[11px] font-semibold text-indigo-600 dark:text-indigo-400 select-none">
+            <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse"></span>
+            <span>{memoryAlert}</span>
+          </div>
+        </div>
+
         <InputBox />
       </footer>
     </main>

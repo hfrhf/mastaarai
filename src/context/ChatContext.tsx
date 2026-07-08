@@ -46,6 +46,7 @@ interface ChatContextType {
   logout: () => Promise<void>;
   memories: Memory[];
   deleteMemory: (id: string) => Promise<void>;
+  memoryAlert: string | null;
 }
 
 const ChatContext = createContext<ChatContextType | undefined>(undefined);
@@ -66,6 +67,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<any | null>(null);
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [memories, setMemories] = useState<Memory[]>([]);
+  const [memoryAlert, setMemoryAlert] = useState<string | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
 
   const storage = getStorageAdapter();
@@ -157,8 +159,12 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
           for (const fact of extracted) {
             const saved = await storage.saveMemory(fact);
             setMemories((prev) => [saved, ...prev]);
-            addToast(settings.language === 'ar' ? `تحديث الذاكرة: "${fact}"` : `Memory updated: "${fact}"`, 'info');
           }
+          // Set the subtle memory alert text
+          setMemoryAlert(settings.language === 'ar' ? 'تم تحديث الذاكرة ✨' : 'Memory updated ✨');
+          setTimeout(() => {
+            setMemoryAlert(null);
+          }, 3500);
         }
       }
     } catch (e) {
@@ -895,6 +901,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
         logout,
         memories,
         deleteMemory,
+        memoryAlert,
       }}
     >
       {children}
