@@ -18,6 +18,27 @@
     "provider": "google",
     "name": "Gemini 3.5 Flash",
     "supportsStreaming": true,
-    "supportsVision": false
+    "supportsVision": true
+  },
+  {
+    "id": "glm-4",
+    "provider": "glm",
+    "name": "GLM 4",
+    "supportsStreaming": true,
+    "supportsVision": true
+  },
+  {
+    "id": "glm-4-plus",
+    "provider": "glm",
+    "name": "GLM 4 Plus",
+    "supportsStreaming": true,
+    "supportsVision": true
+  },
+  {
+    "id": "glm-4-flash",
+    "provider": "glm",
+    "name": "GLM 4 Flash",
+    "supportsStreaming": true,
+    "supportsVision": true
   }
 ]
