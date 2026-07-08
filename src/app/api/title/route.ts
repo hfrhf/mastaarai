@@ -13,7 +13,9 @@ export async function POST(req: NextRequest) {
     }
 
     const systemInstruction = 
-      "You are a helpful assistant. Your task is to generate an extremely short, professional title for a chat conversation based on the user's first message. The title MUST be less than 5 words. Do not use quotes, punctuation, or any introductory phrases (e.g. do not write 'Title: ...'). Just output the title.";
+      "You are a professional assistant. Generate an extremely short, clear, and professional title (maximum 3-4 words) for the chat conversation based on the user's message. " +
+      "The title MUST be in the same language as the user's message (e.g., if the user writes in Arabic, the title MUST be in Arabic). " +
+      "Do NOT use quotes, do NOT use punctuation, do NOT use introductory phrases, and do NOT include any markdown or code blocks. Just output the clean title text directly.";
 
     const isGoogle = model && (model.startsWith('google/') || model.startsWith('gemini-'));
 

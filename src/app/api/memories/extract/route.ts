@@ -21,10 +21,23 @@ export async function POST(req: NextRequest) {
 
     const systemPrompt = `You are an AI memory extraction system. Your task is to analyze the user's message and extract permanent facts, preferences, or details about the user themselves (e.g. name, location, preferred programming languages, framework choice, hobbies).
 Ignore temporary actions, standard questions, or statements not related to user characteristics.
+
+CRITICAL RULE: The extracted facts in the output JSON array MUST be written in the exact same language that the user spoke in.
+- If the user writes in Arabic, the extracted fact MUST be in Arabic.
+- If the user writes in English, the extracted fact MUST be in English.
+- If the user writes in French, the extracted fact MUST be in French.
+
 Return the extracted facts as a valid JSON array of strings. If no permanent facts are mentioned, return an empty JSON array: [].
-Example:
+
+Example 1 (English):
 Input: "Hi, my name is Alex and I build Next.js applications."
 Output: ["Alex is the user's name", "Alex builds Next.js applications"]
+
+Example 2 (Arabic):
+Input: "مرحباً، اسمي أحمد وأنا مطور تطبيقات ويب بلغة بايثون"
+Output: ["أحمد هو اسم المستخدم", "المستخدم مطور تطبيقات ويب بلغة بايثون"]
+
+Example 3 (English):
 Input: "Can you write a loop in Python?"
 Output: []`;
 
