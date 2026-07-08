@@ -11,6 +11,13 @@ export interface Message {
   edited?: boolean;
   searchQuery?: string;
   searchResults?: { title: string; url: string }[];
+  attachments?: Attachment[];
+}
+
+export interface Attachment {
+  name: string;
+  mimeType: string;
+  base64Data: string; // Base64 data (without header prefix)
 }
 
 export interface Chat {

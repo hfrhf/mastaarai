@@ -125,8 +125,34 @@ export const MessageItem: React.FC<MessageItemProps> = ({ message, isLast }) => 
             </div>
           ) : (
             <div className="group relative">
-              <div className="px-4 py-2.5 bg-neutral-100 dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 rounded-3xl text-[15px] leading-relaxed shadow-sm">
-                {message.content}
+              <div className="px-4 py-2.5 bg-neutral-100 dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 rounded-3xl text-[15px] leading-relaxed shadow-sm flex flex-col gap-2">
+                {/* Attachments inside user message bubble */}
+                {message.attachments && message.attachments.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mb-1.5 justify-end">
+                    {message.attachments.map((att, idx) => (
+                      <div 
+                        key={idx} 
+                        className="flex items-center gap-2 p-1.5 bg-white/40 dark:bg-black/30 rounded-xl border border-white/10 dark:border-black/10 max-w-[180px] shadow-sm select-none"
+                      >
+                        {att.mimeType.startsWith('image/') ? (
+                          <img 
+                            src={`data:${att.mimeType};base64,${att.base64Data}`} 
+                            alt={att.name} 
+                            className="w-8 h-8 rounded-lg object-cover"
+                          />
+                        ) : (
+                          <div className="w-8 h-8 rounded-lg bg-red-500/10 text-red-600 dark:text-red-400 flex items-center justify-center font-bold text-[9px] flex-shrink-0">
+                            PDF
+                          </div>
+                        )}
+                        <span className="text-[11px] font-semibold truncate max-w-[100px] text-neutral-800 dark:text-neutral-200">
+                          {att.name}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {message.content && <div>{message.content}</div>}
               </div>
               
               {!isGenerating && (

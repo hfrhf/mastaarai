@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
-import { Chat, Message, ChatSettings, ModelConfig } from '../types/chat';
+import { Chat, Message, ChatSettings, ModelConfig, Attachment } from '../types/chat';
 import { getStorageAdapter } from '../adapters/storage';
 import { Memory } from '../adapters/storage/types';
 import { parseSSEChunk } from '../utils/api';
@@ -30,7 +30,7 @@ interface ChatContextType {
   selectModelId: (modelId: string) => void;
   deleteChat: (chatId: string) => void;
   renameChat: (chatId: string, title: string) => void;
-  sendMessage: (content: string) => Promise<void>;
+  sendMessage: (content: string, attachments?: Attachment[]) => Promise<void>;
   stopGenerating: () => void;
   regenerateMessage: (messageId: string) => Promise<void>;
   editMessage: (messageId: string, newContent: string) => Promise<void>;
@@ -358,7 +358,11 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
         payloadMessages.push({ role: 'system', content: systemContext });
       }
       
-      payloadMessages.push(...messageHistory.map(m => ({ role: m.role, content: m.content })));
+      payloadMessages.push(...messageHistory.map(m => ({ 
+        role: m.role, 
+        content: m.content,
+        attachments: m.attachments
+      })));
 
       const response = await fetch('/api/chat', {
         method: 'POST',
@@ -537,8 +541,8 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     ];
   };
 
-  const sendMessage = async (content: string) => {
-    if (!content.trim()) return;
+  const sendMessage = async (content: string, attachments?: Attachment[]) => {
+    if (!content.trim() && (!attachments || attachments.length === 0)) return;
     
     let currentChatId = activeChatId;
     let currentChat: Chat | undefined;
@@ -579,6 +583,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
       createdAt: new Date().toISOString(),
       model: currentChat.modelId,
       status: 'done',
+      attachments,
     };
 
     const assistantMessage: Message = {

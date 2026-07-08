@@ -32,10 +32,23 @@ export async function POST(req: NextRequest) {
 
       // Filter out system message and format history for Gemini contents
       const filteredMessages = messages.filter((m: any) => m.role !== 'system');
-      const contents = filteredMessages.map((m: any) => ({
-        role: m.role === 'assistant' ? 'model' : 'user',
-        parts: [{ text: m.content || '' }]
-      }));
+      const contents = filteredMessages.map((m: any) => {
+        const parts: any[] = [{ text: m.content || '' }];
+        if (m.attachments && m.attachments.length > 0) {
+          m.attachments.forEach((att: any) => {
+            parts.push({
+              inlineData: {
+                mimeType: att.mimeType,
+                data: att.base64Data
+              }
+            });
+          });
+        }
+        return {
+          role: m.role === 'assistant' ? 'model' : 'user',
+          parts
+        };
+      });
 
       const geminiBody: any = {
         contents,
@@ -170,10 +183,29 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    let mappedMessages = messages.map((m: any) => ({
-      role: m.role,
-      content: m.content,
-    }));
+    let mappedMessages = messages.map((m: any) => {
+      if (m.attachments && m.attachments.length > 0) {
+        const contentArray: any[] = [{ type: 'text', text: m.content || '' }];
+        m.attachments.forEach((att: any) => {
+          if (att.mimeType.startsWith('image/')) {
+            contentArray.push({
+              type: 'image_url',
+              image_url: {
+                url: `data:${att.mimeType};base64,${att.base64Data}`
+              }
+            });
+          }
+        });
+        return {
+          role: m.role,
+          content: contentArray,
+        };
+      }
+      return {
+        role: m.role,
+        content: m.content,
+      };
+    });
 
     if (memoryContext) {
       const sysMsgIdx = mappedMessages.findIndex((m: any) => m.role === 'system');

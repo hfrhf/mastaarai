@@ -17,7 +17,9 @@ export async function POST(req: NextRequest) {
       "The title MUST be in the same language as the user's message (e.g., if the user writes in Arabic, the title MUST be in Arabic). " +
       "Do NOT use quotes, do NOT use punctuation, do NOT use introductory phrases, and do NOT include any markdown or code blocks. Just output the clean title text directly.";
 
+    // Always use fast, non-reasoning models for title utility to avoid reasoning thoughts and truncation
     const isGoogle = model && (model.startsWith('google/') || model.startsWith('gemini-'));
+    const titleModel = isGoogle ? 'gemini-2.5-flash' : 'MiniMaxAI/MiniMax-M2.7';
 
     if (isGoogle) {
       const geminiKey = process.env.GEMINI_API_KEY;
@@ -42,7 +44,7 @@ export async function POST(req: NextRequest) {
       };
 
       const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${geminiKey}`,
+        `https://generativelanguage.googleapis.com/v1beta/models/${titleModel}:generateContent?key=${geminiKey}`,
         {
           method: 'POST',
           headers: {
@@ -64,8 +66,8 @@ export async function POST(req: NextRequest) {
       const json = await response.json();
       let title = json?.candidates?.[0]?.content?.parts?.[0]?.text || '';
       
-      // Strip thinking process block (<think>...</think>)
-      title = title.replace(/<think>[\s\S]*?<\/think>/g, '').trim();
+      // Strip thinking process block (<think>...</think> or unclosed <think>...)
+      title = title.replace(/<think>[\s\S]*?(?:<\/think>|$)/g, '').trim();
       // Strip surrounding quotes if any
       title = title.replace(/^["']|["']$/g, '').trim();
       
@@ -88,7 +90,7 @@ export async function POST(req: NextRequest) {
     }
 
     const body = {
-      model: model || 'MiniMaxAI/MiniMax-M2.7',
+      model: titleModel,
       messages: [
         { role: 'system', content: systemInstruction },
         { role: 'user', content: `Generate a title for: "${prompt}"` },
@@ -119,8 +121,8 @@ export async function POST(req: NextRequest) {
     const json = await response.json();
     let title = json?.choices?.[0]?.message?.content || '';
     
-    // Strip thinking process block (<think>...</think>)
-    title = title.replace(/<think>[\s\S]*?<\/think>/g, '').trim();
+    // Strip thinking process block (<think>...</think> or unclosed <think>...)
+    title = title.replace(/<think>[\s\S]*?(?:<\/think>|$)/g, '').trim();
     // Strip surrounding quotes if any
     title = title.replace(/^["']|["']$/g, '').trim();
 
