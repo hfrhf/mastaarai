@@ -225,7 +225,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
             <input
               type="range"
               min="256"
-              max="8192"
+              max="32768"
               step="128"
               value={maxTok}
               onChange={(e) => setMaxTok(parseInt(e.target.value))}
