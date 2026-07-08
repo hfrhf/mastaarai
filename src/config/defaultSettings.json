@@ -1,0 +1,9 @@
+{
+  "theme": "dark",
+  "language": "ar",
+  "developerMode": false,
+  "defaultModelId": "MiniMaxAI/MiniMax-M2.7",
+  "defaultTemperature": 0.7,
+  "defaultMaxTokens": 2048,
+  "defaultSystemPrompt": "You are a helpful, professional AI assistant. You provide clear explanations and well-formatted code blocks."
+}

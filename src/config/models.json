@@ -1,0 +1,16 @@
+[
+  {
+    "id": "moonshotai/Kimi-K2.6",
+    "provider": "dahl",
+    "name": "Kimi K2.6",
+    "supportsStreaming": true,
+    "supportsVision": false
+  },
+  {
+    "id": "MiniMaxAI/MiniMax-M2.7",
+    "provider": "dahl",
+    "name": "MiniMax M2.7",
+    "supportsStreaming": true,
+    "supportsVision": false
+  }
+]
