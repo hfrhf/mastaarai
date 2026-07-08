@@ -1,5 +1,7 @@
 import { NextRequest } from 'next/server';
 
+export const runtime = 'edge';
+
 export async function POST(req: NextRequest) {
   try {
     const { messages, model, temperature, maxTokens, stream } = await req.json();
