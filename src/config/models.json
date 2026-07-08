@@ -4,7 +4,7 @@
     "provider": "dahl",
     "name": "Kimi K2.6",
     "supportsStreaming": true,
-    "supportsVision": false
+    "supportsVision": true
   },
   {
     "id": "MiniMaxAI/MiniMax-M2.7",
